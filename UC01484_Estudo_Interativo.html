@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8" />
+<title>UC01484 — Estudo Interativo</title>
+<style>
+  :root{
+    --navy:#12294B;
+    --navy2:#1B3A6B;
+    --coral:#E8622C;
+    --bg:#F5F7FA;
+    --text:#1B2733;
+    --muted:#5B6B7C;
+    --card-back:#0C1D38;
+    --ok:#2E9E6D;
+    --bad:#C0392B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Calibri, "Segoe UI", Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:0 0 50px;
+  }
+  header{
+    width:100%;
+    background:var(--navy);
+    padding:26px 16px 0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  h1{
+    font-family:Cambria, Georgia, serif;
+    color:#fff;
+    font-size:24px;
+    margin:0 0 2px;
+  }
+  .subtitle{
+    color:#B9C8DE;
+    font-size:12.5px;
+    margin-bottom:18px;
+  }
+  nav{
+    display:flex;
+    gap:4px;
+  }
+  .tab-btn{
+    background:transparent;
+    border:none;
+    color:#B9C8DE;
+    padding:10px 20px;
+    font-size:14px;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+    transition:color .15s, border-color .15s;
+  }
+  .tab-btn:hover{ color:#fff; }
+  .tab-btn.active{
+    color:#fff;
+    border-bottom-color:var(--coral);
+    font-weight:bold;
+  }
+  main{
+    width:100%;
+    max-width:760px;
+    padding:28px 18px 0;
+  }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ---------- GUIDE ---------- */
+  .guide-section{
+    background:#fff;
+    border:1px solid #DCE3EC;
+    border-radius:12px;
+    padding:20px 22px;
+    margin-bottom:16px;
+  }
+  .guide-section h2{
+    font-family:Cambria, Georgia, serif;
+    color:var(--navy);
+    font-size:19px;
+    margin:0 0 10px;
+  }
+  .guide-section h3{
+    color:var(--navy2);
+    font-size:14.5px;
+    margin:14px 0 6px;
+  }
+  .guide-section p, .guide-section li{
+    font-size:13.5px;
+    line-height:1.55;
+    color:var(--text);
+  }
+  .guide-section ul{ margin:4px 0; padding-left:20px; }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    margin:8px 0;
+  }
+  th, td{
+    border:1px solid #DCE3EC;
+    padding:6px 10px;
+    text-align:left;
+  }
+  th{ background:var(--bg); color:var(--navy2); }
+  .pill{
+    display:inline-block;
+    background:var(--navy2);
+    color:#fff;
+    font-size:11px;
+    font-weight:bold;
+    padding:2px 9px;
+    border-radius:999px;
+    margin-right:6px;
+  }
+  .tip{
+    background:#FBEFE9;
+    border-left:3px solid var(--coral);
+    padding:8px 12px;
+    font-size:12.5px;
+    color:#7A3315;
+    border-radius:0 6px 6px 0;
+    margin-top:8px;
+  }
+  .checklist label{
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    font-size:13.5px;
+    margin-bottom:6px;
+    cursor:pointer;
+  }
+  .checklist input{ margin-top:3px; }
+
+  /* ---------- QUIZ ---------- */
+  .quiz-progress{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:10px;
+  }
+  .q-card{
+    background:#fff;
+    border:1px solid #DCE3EC;
+    border-radius:12px;
+    padding:22px;
+  }
+  .q-tag{
+    font-size:10.5px;
+    font-weight:bold;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:var(--coral);
+  }
+  .q-text{
+    font-size:16px;
+    font-weight:600;
+    margin:8px 0 16px;
+    line-height:1.4;
+  }
+  .opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:var(--bg);
+    border:1px solid #DCE3EC;
+    border-radius:8px;
+    padding:11px 14px;
+    margin-bottom:9px;
+    font-size:13.5px;
+    cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .opt:hover{ border-color:var(--navy2); }
+  .opt.correct{ background:#E4F5EC; border-color:var(--ok); color:#1D6B49; font-weight:bold; }
+  .opt.wrong{ background:#FBEAE8; border-color:var(--bad); color:var(--bad); font-weight:bold; }
+  .opt.disabled{ cursor:default; }
+  .explain{
+    margin-top:10px;
+    font-size:12.5px;
+    color:var(--muted);
+    background:var(--bg);
+    padding:10px 12px;
+    border-radius:8px;
+    display:none;
+  }
+  .quiz-controls{
+    display:flex;
+    justify-content:space-between;
+    margin-top:16px;
+  }
+  .quiz-score{
+    text-align:center;
+    padding:40px 20px;
+  }
+  .quiz-score .big{
+    font-family:Cambria, Georgia, serif;
+    font-size:44px;
+    color:var(--navy);
+    font-weight:bold;
+  }
+
+  /* ---------- FLASHCARDS ---------- */
+  .filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    margin-bottom:16px;
+  }
+  .filter-btn{
+    border:1px solid #DCE3EC;
+    background:#fff;
+    color:var(--navy2);
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .filter-btn.active{
+    background:var(--navy2);
+    border-color:var(--navy2);
+    color:#fff;
+  }
+  .fc-counter{ text-align:center; font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .progress-wrap{
+    width:100%;
+    height:5px;
+    background:#DCE3EC;
+    border-radius:999px;
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .progress-bar{ height:100%; background:var(--coral); transition:width .3s; }
+  .scene{
+    width:100%;
+    height:280px;
+    perspective:1400px;
+    margin-bottom:20px;
+  }
+  .fcard{
+    position:relative;
+    width:100%;
+    height:100%;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.4,.2,.2,1);
+  }
+  .fcard.flipped{ transform:rotateY(180deg); }
+  .face{
+    position:absolute;
+    inset:0;
+    border-radius:14px;
+    backface-visibility:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:26px;
+    text-align:center;
+    box-shadow:0 8px 22px rgba(18,41,75,0.16);
+  }
+  .front{ background:#fff; border:1px solid #DCE3EC; }
+  .back{ background:var(--card-back); color:#fff; transform:rotateY(180deg); }
+  .face .tag{
+    position:absolute; top:12px; left:16px;
+    font-size:10px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; color:var(--coral);
+  }
+  .face.back .tag{ color:#F0A87E; }
+  .face p{ font-size:17px; font-weight:600; margin:0; line-height:1.4; }
+  .face.back p{ font-size:14.5px; font-weight:400; }
+  .face .hint{ position:absolute; bottom:12px; font-size:10.5px; color:var(--muted); }
+  .face.back .hint{ color:#9FB2C9; }
+  .fc-controls{ display:flex; justify-content:center; gap:12px; }
+
+  button.nav{
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    padding:9px 18px;
+    border-radius:9px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  button.nav:hover{ background:var(--navy2); }
+  button.nav.secondary{
+    background:transparent;
+    color:var(--navy2);
+    border:1px solid #DCE3EC;
+  }
+  button.nav:disabled{ opacity:.4; cursor:default; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>UC01484 — Estudo Interativo</h1>
+  <div class="subtitle">Revisões Gerais · Formador: Sérgio Cruz</div>
+  <nav>
+    <button class="tab-btn active" data-tab="guide">📘 Guia</button>
+    <button class="tab-btn" data-tab="quiz">📝 Quiz</button>
+    <button class="tab-btn" data-tab="flash">🔁 Flashcards</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ===================== GUIDE ===================== -->
+  <section id="view-guide" class="view active"></section>
+
+  <!-- ===================== QUIZ ===================== -->
+  <section id="view-quiz" class="view">
+    <div class="quiz-progress" id="quizProgress"></div>
+    <div id="quizArea"></div>
+  </section>
+
+  <!-- ===================== FLASHCARDS ===================== -->
+  <section id="view-flash" class="view">
+    <div class="filters" id="filters"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="fc-counter" id="fcCounter"></div>
+    <div class="scene">
+      <div class="fcard" id="fcard">
+        <div class="face front">
+          <span class="tag" id="frontTag"></span>
+          <p id="frontText"></p>
+          <span class="hint">clica para ver a resposta</span>
+        </div>
+        <div class="face back">
+          <span class="tag" id="backTag"></span>
+          <p id="backText"></p>
+          <span class="hint">clica para voltar</span>
+        </div>
+      </div>
+    </div>
+    <div class="fc-controls">
+      <button class="nav secondary" id="fcPrev">◀ Anterior</button>
+      <button class="nav secondary" id="fcShuffle">🔀 Baralhar</button>
+      <button class="nav" id="fcNext">Seguinte ▶</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* =======================================================
+   TAB SWITCHING
+======================================================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* =======================================================
+   GUIDE CONTENT
+======================================================= */
+const guideHTML = `
+  <div class="guide-section">
+    <h2>1. Vulnerabilidades + Ciclo de Gestão + CVE/CVSS/NVD</h2>
+    <h3>O que é uma vulnerabilidade?</h3>
+    <p>Falha técnica num sistema, aplicação, serviço ou configuração que pode ser explorada por um atacante.</p>
+    <h3>Tipos comuns</h3>
+    <p>Configuração incorreta · software desatualizado · falhas de autenticação · falhas de autorização · exposição de dados · injeção · falta de validação · criptografia fraca · serviços desnecessários ativos.</p>
+    <h3>Exemplos reais</h3>
+    <p>SSH com root login · Apache sem headers de segurança · NTLMv1 ativo · TLS 1.0/1.1 · SMB Signing desativado · diretórios expostos · endpoints vulneráveis (TryHackMe).</p>
+
+    <h3>Ciclo de Gestão de Vulnerabilidades (6 fases)</h3>
+    <table>
+      <tr><th>Fase</th><th>O que envolve</th></tr>
+      <tr><td><span class="pill">1</span>Identificação</td><td>Scanning, inventário, descoberta de serviços, CVE/NVD</td></tr>
+      <tr><td><span class="pill">2</span>Análise</td><td>Impacto, probabilidade, risco, contexto do negócio</td></tr>
+      <tr><td><span class="pill">3</span>Priorização</td><td>CVSS, exploitability, exposição, criticidade do ativo</td></tr>
+      <tr><td><span class="pill">4</span>Mitigação</td><td>Hardening, atualizações, correções, reconfiguração</td></tr>
+      <tr><td><span class="pill">5</span>Validação</td><td>Rescan, evidências, logs, testes</td></tr>
+      <tr><td><span class="pill">6</span>Monitorização</td><td>Alertas, SIEM, Sysmon, auditoria contínua</td></tr>
+    </table>
+    <div class="tip">💡 Truque para decorar a ordem: Identificar → Analisar → Priorizar → Mitigar → Validar → Monitorizar (IAPMVM).</div>
+
+    <h3>CVE, CVSS, NVD</h3>
+    <ul>
+      <li><b>CVE</b> — identificador único de vulnerabilidade, mantido pela MITRE. Ex.: <code>CVE-2026-42945</code>.</li>
+      <li><b>CVSS</b> — sistema de pontuação de severidade.</li>
+      <li><b>Vetores CVSS:</b> AV (Attack Vector) · AC (Attack Complexity) · PR (Privileges Required) · UI (User Interaction) · S (Scope) · CIA (Impacto)</li>
+      <li><b>NVD</b> — base de dados oficial do NIST; junta CVE + CVSS + detalhes técnicos + referências.</li>
+    </ul>
+    <table>
+      <tr><th>Score</th><th>Severidade</th></tr>
+      <tr><td>0.0 – 3.9</td><td>Baixa</td></tr>
+      <tr><td>4.0 – 6.9</td><td>Média</td></tr>
+      <tr><td>7.0 – 8.9</td><td>Alta</td></tr>
+      <tr><td>9.0 – 10.0</td><td>Crítica</td></tr>
+    </table>
+    <p><b>Porque importa para a XPTO:</b> justificar risco, priorizar mitigação, explicar impacto ao cliente.</p>
+  </div>
+
+  <div class="guide-section">
+    <h2>2. Scanning + Ética + OpenVAS + Nessus</h2>
+    <h3>Tipos de scanning</h3>
+    <p>Descoberta de hosts (ping sweep) · descoberta de portas (port scanning) · descoberta de serviços (service enumeration) · scanning de vulnerabilidades · scanning autenticado · scanning não autenticado.</p>
+    <h3>Técnicas</h3>
+    <p>TCP SYN scan · UDP scan · banner grabbing · fingerprinting · OS detection.</p>
+    <h3>Ferramentas</h3>
+    <p>nmap · OpenVAS · Nessus · Nikto · Gobuster · curl.</p>
+
+    <h3>Ética e legalidade</h3>
+    <ul>
+      <li>Nunca scanear sistemas sem autorização.</li>
+      <li>Nunca explorar vulnerabilidades fora de ambientes controlados.</li>
+      <li>Sempre documentar e obter consentimento.</li>
+      <li>Sempre respeitar limites.</li>
+    </ul>
+    <div class="tip">⚠️ Scanning pode causar: DoS, logs massivos, alertas, bloqueios e impacto real.</div>
+
+    <h3>Preparação do ambiente</h3>
+    <p>Antes de scanear: validar IP, permissões, janelas de manutenção, impacto e ferramentas. Configurações a rever: firewall, VLAN, segmentação, credenciais, logging.</p>
+
+    <h3>OpenVAS vs. Nessus</h3>
+    <table>
+      <tr><th></th><th>OpenVAS</th><th>Nessus</th></tr>
+      <tr><td>Custo</td><td>Gratuito</td><td>Pago</td></tr>
+      <tr><td>Deteção</td><td>Boa</td><td>Melhor / mais completa</td></tr>
+      <tr><td>Flexibilidade</td><td>Mais flexível</td><td>—</td></tr>
+    </table>
+    <p><b>Fluxo de trabalho:</b> criar target/scan → configurar → executar → analisar → mitigar → rescan.</p>
+    <p><b>Findings (OpenVAS):</b> High · Medium · Low · Log · False positive.</p>
+  </div>
+
+  <div class="guide-section">
+    <h2>3. OWASP 2025 + TryHackMe + XPTO</h2>
+    <h3>Categorias OWASP 2025 revistas</h3>
+    <p>IAAA Failures · Application Design Flaws · Insecure Data Handling · vulnerabilidades exploradas nos labs TryHackMe.</p>
+    <h3>Exemplos reais de falhas aplicacionais</h3>
+    <p>Endpoints vulneráveis · falta de validação/sanitização · exposição de dados · má gestão de tokens/sessões.</p>
+    <h3>Mitigação (aplicacional)</h3>
+    <p>Validação · sanitização · controlo de acesso · encriptação · logs · TLS · rate limiting.</p>
+
+    <h3>TryHackMe — pontos-chave</h3>
+    <ul>
+      <li><b>CVE-2026-42945 (NGINX Rift):</b> endpoint vulnerável → exploração → flag → mitigação.</li>
+      <li><b>OWASP 2025 (salas IAAA):</b> exploração → comandos usados → evidências → mitigação.</li>
+    </ul>
+
+    <h3>XPTO — pontos-chave</h3>
+    <ul>
+      <li><b>Camadas revistas:</b> Windows · Linux · Apache · SSH · TLS · SMB · RDP.</li>
+      <li><b>Mitigação:</b> hardening · reconfiguração · atualizações · firewall · logs · Sysmon.</li>
+      <li><b>Risco:</b> comparação antes/depois, impacto CIA, probabilidade, score CVSS.</li>
+    </ul>
+  </div>
+
+  <div class="guide-section">
+    <h2>Checklist final antes do teste</h2>
+    <div class="checklist">
+      <label><input type="checkbox">Sei definir vulnerabilidade e dar 3 exemplos reais.</label>
+      <label><input type="checkbox">Sei recitar as 6 fases do ciclo de gestão, pela ordem.</label>
+      <label><input type="checkbox">Sei explicar CVE vs CVSS vs NVD e ler a tabela de severidade.</label>
+      <label><input type="checkbox">Sei os 6 vetores CVSS (AV, AC, PR, UI, S, CIA).</label>
+      <label><input type="checkbox">Sei distinguir scanning autenticado de não autenticado.</label>
+      <label><input type="checkbox">Sei 3 riscos éticos/técnicos do scanning.</label>
+      <label><input type="checkbox">Sei 2 diferenças entre OpenVAS e Nessus.</label>
+      <label><input type="checkbox">Sei o que é IAAA e como mitigar falhas associadas.</label>
+      <label><input type="checkbox">Consigo descrever a exploração feita no TryHackMe (CVE-2026-42945) passo a passo.</label>
+      <label><input type="checkbox">Consigo indicar a vulnerabilidade mais crítica da XPTO e como foi mitigada.</label>
+    </div>
+  </div>
+`;
+document.getElementById('view-guide').innerHTML = guideHTML;
+
+/* =======================================================
+   QUIZ
+======================================================= */
+const QUIZ = [
+  {cat:"Vulnerabilidades", q:"Uma vulnerabilidade é, por definição:", opts:["Um ataque já concluído com sucesso","Uma falha técnica que pode ser explorada por um atacante","Um tipo de malware","Um relatório de auditoria"], correct:1},
+  {cat:"Vulnerabilidades", q:"Qual destes NÃO é um tipo de vulnerabilidade referido na revisão?", opts:["Configuração incorreta","Falhas de autorização","Backup automático","Criptografia fraca"], correct:2},
+  {cat:"Ciclo de Gestão", q:"Qual é a ordem correta das 6 fases do ciclo de gestão de vulnerabilidades?", opts:["Análise → Identificação → Mitigação → Priorização → Monitorização → Validação","Identificação → Análise → Priorização → Mitigação → Validação → Monitorização","Priorização → Identificação → Análise → Validação → Mitigação → Monitorização","Identificação → Mitigação → Análise → Priorização → Validação → Monitorização"], correct:1},
+  {cat:"Ciclo de Gestão", q:"Na fase de \"Priorização\", o que é tipicamente usado?", opts:["Sysmon e SIEM","CVSS, exploitability, exposição e criticidade do ativo","Rescan e evidências","Hardening e reconfiguração"], correct:1},
+  {cat:"Ciclo de Gestão", q:"A fase de \"Validação\" inclui:", opts:["Scanning inicial e inventário","Rescan, evidências, logs e testes","Firewall e VLAN","Impacto e probabilidade"], correct:1},
+  {cat:"CVE/CVSS/NVD", q:"O que é um CVE?", opts:["Uma pontuação de severidade","Um identificador único de vulnerabilidade, mantido pela MITRE","Uma base de dados do NIST","Uma ferramenta de scanning"], correct:1},
+  {cat:"CVE/CVSS/NVD", q:"Um CVSS de 9.4 corresponde a que nível de severidade?", opts:["Baixa","Média","Alta","Crítica"], correct:3},
+  {cat:"CVE/CVSS/NVD", q:"Qual destes NÃO é um vetor CVSS?", opts:["AV (Attack Vector)","PR (Privileges Required)","OS (Operating System)","UI (User Interaction)"], correct:2},
+  {cat:"CVE/CVSS/NVD", q:"O NVD é mantido por:", opts:["MITRE","NIST","OWASP","CVSS.org"], correct:1},
+  {cat:"Scanning", q:"\"Ping sweep\" é um exemplo de:", opts:["Descoberta de portas","Descoberta de hosts","Scanning autenticado","Banner grabbing"], correct:1},
+  {cat:"Scanning", q:"Qual destas NÃO é uma técnica de scanning mencionada?", opts:["TCP SYN scan","Banner grabbing","Rate limiting","OS detection"], correct:2},
+  {cat:"Scanning", q:"Antes de fazer scanning, o que deve ser sempre validado?", opts:["Apenas o IP alvo","IP, permissões, janelas de manutenção, impacto e ferramentas","Apenas as ferramentas","Apenas o firewall"], correct:1},
+  {cat:"Scanning", q:"Um scan sem autorização é:", opts:["Aceitável se for um ambiente de teste","Sempre proibido pelas regras fundamentais de ética","Permitido se não causar DoS","Permitido em redes públicas"], correct:1},
+  {cat:"OpenVAS/Nessus", q:"Qual é uma vantagem do Nessus face ao OpenVAS?", opts:["É gratuito","É mais flexível","Tem melhor deteção de CVEs","Não precisa de scan autenticado"], correct:2},
+  {cat:"OpenVAS/Nessus", q:"Qual é uma vantagem do OpenVAS face ao Nessus?", opts:["Melhor deteção","É gratuito e mais flexível","Relatórios mais profissionais","Scanning mais rápido"], correct:1},
+  {cat:"OpenVAS/Nessus", q:"Quais são os tipos de findings do OpenVAS?", opts:["Crítico, Alto, Médio, Baixo","High, Medium, Low, Log, False positive","P1, P2, P3, P4","Vermelho, Amarelo, Verde"], correct:1},
+  {cat:"OWASP/XPTO", q:"IAAA refere-se a:", opts:["Injeção, Autenticação, Autorização, Auditoria","Identidade, Autenticação, Autorização, Responsabilização","Impacto, Ameaça, Ativo, Auditoria","Identificação, Análise, Ação, Alerta"], correct:1},
+  {cat:"OWASP/XPTO", q:"Qual destas NÃO é uma medida de mitigação aplicacional referida?", opts:["Validação e sanitização","Rate limiting","Desativar todos os logs","TLS e encriptação"], correct:2},
+];
+
+let quizOrder = QUIZ.map((_,i)=>i);
+let quizPos = 0;
+let quizScore = 0;
+let answered = false;
+
+function renderQuiz(){
+  const quizArea = document.getElementById('quizArea');
+  const quizProgress = document.getElementById('quizProgress');
+
+  if(quizPos >= quizOrder.length){
+    quizProgress.textContent = "";
+    quizArea.innerHTML = `
+      <div class="q-card quiz-score">
+        <div class="big">${quizScore} / ${quizOrder.length}</div>
+        <p style="color:var(--muted); font-size:14px; margin-top:6px;">respostas certas</p>
+        <button class="nav" id="restartBtn" style="margin-top:16px;">🔁 Repetir Quiz</button>
+      </div>`;
+    document.getElementById('restartBtn').onclick = () => {
+      quizPos = 0; quizScore = 0; answered = false;
+      quizOrder = QUIZ.map((_,i)=>i);
+      for(let i=quizOrder.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [quizOrder[i],quizOrder[j]] = [quizOrder[j],quizOrder[i]];
+      }
+      renderQuiz();
+    };
+    return;
+  }
+
+  const item = QUIZ[quizOrder[quizPos]];
+  quizProgress.textContent = `Pergunta ${quizPos+1} de ${quizOrder.length} · Pontuação: ${quizScore}`;
+  answered = false;
+
+  let optsHTML = item.opts.map((o,i)=>
+    `<button class="opt" data-i="${i}">${o}</button>`
+  ).join("");
+
+  quizArea.innerHTML = `
+    <div class="q-card">
+      <div class="q-tag">${item.cat}</div>
+      <div class="q-text">${item.q}</div>
+      ${optsHTML}
+      <div class="explain" id="explainBox"></div>
+      <div class="quiz-controls">
+        <span></span>
+        <button class="nav" id="nextQBtn" disabled>Próxima ▶</button>
+      </div>
+    </div>`;
+
+  document.querySelectorAll('.opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(answered) return;
+      answered = true;
+      const chosen = parseInt(btn.dataset.i);
+      document.querySelectorAll('.opt').forEach((b2,i2)=>{
+        b2.classList.add('disabled');
+        if(i2 === item.correct) b2.classList.add('correct');
+        else if(i2 === chosen) b2.classList.add('wrong');
+      });
+      if(chosen === item.correct) quizScore++;
+      document.getElementById('nextQBtn').disabled = false;
+    });
+  });
+
+  document.getElementById('nextQBtn').addEventListener('click', ()=>{
+    quizPos++;
+    renderQuiz();
+  });
+}
+renderQuiz();
+
+/* =======================================================
+   FLASHCARDS
+======================================================= */
+const CARDS = [
+  {cat:"Vulnerabilidades", front:"O que é uma vulnerabilidade?", back:"Uma falha técnica num sistema, aplicação, serviço ou configuração que pode ser explorada por um atacante."},
+  {cat:"Vulnerabilidades", front:"Dá 4 tipos comuns de vulnerabilidades.", back:"Configuração incorreta, software desatualizado, falhas de autenticação/autorização, criptografia fraca (também: exposição de dados, injeção, falta de validação, serviços desnecessários)."},
+  {cat:"Vulnerabilidades", front:"Dá 3 exemplos reais de vulnerabilidades vistas na UC.", back:"SSH com root login, TLS 1.0/1.1 ativo, SMB Signing desativado (também: NTLMv1 ativo, Apache sem headers de segurança, diretórios expostos)."},
+  {cat:"Ciclo de Gestão", front:"Quais são as 6 fases do ciclo de gestão de vulnerabilidades?", back:"1. Identificação · 2. Análise · 3. Priorização · 4. Mitigação · 5. Validação · 6. Monitorização."},
+  {cat:"Ciclo de Gestão", front:"O que acontece na fase de Identificação?", back:"Scanning, inventário, descoberta de serviços, consulta a CVE/NVD."},
+  {cat:"Ciclo de Gestão", front:"O que acontece na fase de Análise?", back:"Avaliação do impacto, probabilidade, risco e contexto do negócio."},
+  {cat:"Ciclo de Gestão", front:"O que acontece na fase de Priorização?", back:"Uso do CVSS, avaliação da exploitability, exposição e criticidade do ativo."},
+  {cat:"Ciclo de Gestão", front:"O que acontece na fase de Mitigação?", back:"Hardening, atualizações, correções e reconfiguração."},
+  {cat:"Ciclo de Gestão", front:"O que acontece na fase de Validação?", back:"Rescan, recolha de evidências, análise de logs, testes."},
+  {cat:"Ciclo de Gestão", front:"O que acontece na fase de Monitorização?", back:"Alertas, SIEM, Sysmon, auditoria contínua."},
+  {cat:"CVE/CVSS/NVD", front:"O que é um CVE?", back:"Identificador único de uma vulnerabilidade, mantido pela MITRE. Ex.: CVE-2026-42945."},
+  {cat:"CVE/CVSS/NVD", front:"O que é o CVSS?", back:"Sistema de pontuação (0 a 10) que classifica a severidade de uma vulnerabilidade."},
+  {cat:"CVE/CVSS/NVD", front:"Qual é a tabela de severidade do CVSS?", back:"0.0–3.9 Baixa · 4.0–6.9 Média · 7.0–8.9 Alta · 9.0–10.0 Crítica."},
+  {cat:"CVE/CVSS/NVD", front:"Quais são os 6 vetores do CVSS?", back:"AV (Attack Vector), AC (Attack Complexity), PR (Privileges Required), UI (User Interaction), S (Scope), CIA (Impacto)."},
+  {cat:"CVE/CVSS/NVD", front:"O que é o NVD e quem o mantém?", back:"National Vulnerability Database — base de dados oficial mantida pelo NIST, com CVE + CVSS + detalhes técnicos + referências."},
+  {cat:"Scanning", front:"Nomeia os 6 tipos de scanning revistos.", back:"Descoberta de hosts, descoberta de portas, descoberta de serviços, scanning de vulnerabilidades, scanning autenticado, scanning não autenticado."},
+  {cat:"Scanning", front:"Diferença entre scanning autenticado e não autenticado?", back:"Autenticado usa credenciais para ver \"por dentro\" do sistema (mais preciso). Não autenticado simula um atacante externo, vendo só o que está exposto."},
+  {cat:"Scanning", front:"Dá 3 técnicas de scanning.", back:"TCP SYN scan, banner grabbing, OS detection (também: UDP scan, fingerprinting)."},
+  {cat:"Scanning", front:"Nomeia 4 ferramentas de scanning referidas.", back:"nmap, OpenVAS, Nessus, Nikto (também: Gobuster, curl)."},
+  {cat:"Scanning", front:"Quais são as regras fundamentais de ética no scanning?", back:"Nunca scanear sem autorização, nunca explorar fora de ambientes controlados, sempre documentar, sempre obter consentimento, sempre respeitar limites."},
+  {cat:"Scanning", front:"Que riscos reais pode causar um scanning mal planeado?", back:"DoS, logs massivos, alertas desnecessários, bloqueios de IP/conta, impacto real em produção."},
+  {cat:"OpenVAS/Nessus", front:"Diferença principal: OpenVAS vs Nessus?", back:"OpenVAS é gratuito e mais flexível. Nessus é pago, mais completo e com melhor deteção de CVEs."},
+  {cat:"OpenVAS/Nessus", front:"Fluxo de trabalho típico no OpenVAS.", back:"Criar target → criar task → executar scan → analisar resultados → exportar relatório → mitigar → rescan."},
+  {cat:"OpenVAS/Nessus", front:"Quais são os tipos de findings do OpenVAS?", back:"High, Medium, Low, Log, False positive."},
+  {cat:"OWASP/XPTO", front:"O que significa IAAA?", back:"Identidade, Autenticação, Autorização e Responsabilização (Accountability)."},
+  {cat:"OWASP/XPTO", front:"Dá exemplos de falhas aplicacionais reais revistas.", back:"Endpoints vulneráveis, falta de validação/sanitização, exposição de dados, má gestão de tokens/sessões."},
+  {cat:"OWASP/XPTO", front:"Como se mitigam falhas aplicacionais em geral?", back:"Validação, sanitização, controlo de acesso, encriptação, logs, TLS, rate limiting."},
+  {cat:"OWASP/XPTO", front:"Que CVE real foi explorada no TryHackMe?", back:"CVE-2026-42945 (NGINX Rift) — endpoint vulnerável, exploração, flag obtida, mitigação proposta."},
+  {cat:"OWASP/XPTO", front:"Que camadas/vulnerabilidades da XPTO foram revistas?", back:"Windows, Linux, Apache, SSH, TLS, SMB, RDP."},
+  {cat:"OWASP/XPTO", front:"Como se demonstra a redução de risco na XPTO?", back:"Comparando antes/depois: impacto CIA, probabilidade e score CVSS antes e depois da mitigação."},
+];
+
+let fcFiltered = [...CARDS];
+let fcOrder = fcFiltered.map((_,i)=>i);
+let fcPos = 0;
+let fcFlipped = false;
+let fcActiveCat = "Todas";
+
+const fcCategories = ["Todas", ...Array.from(new Set(CARDS.map(c=>c.cat)))];
+const fcardEl = document.getElementById('fcard');
+const filtersEl = document.getElementById('filters');
+
+function buildFilters(){
+  filtersEl.innerHTML = "";
+  fcCategories.forEach(cat=>{
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (cat===fcActiveCat ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => { fcActiveCat = cat; applyFcFilter(); };
+    filtersEl.appendChild(btn);
+  });
+}
+
+function applyFcFilter(){
+  fcFiltered = fcActiveCat === "Todas" ? [...CARDS] : CARDS.filter(c=>c.cat===fcActiveCat);
+  fcOrder = fcFiltered.map((_,i)=>i);
+  fcPos = 0;
+  fcFlipped = false;
+  fcardEl.classList.remove('flipped');
+  buildFilters();
+  renderFc();
+}
+
+function renderFc(){
+  const c = fcFiltered[fcOrder[fcPos]];
+  if(!c){
+    document.getElementById('frontText').textContent = "Sem cartões nesta categoria.";
+    document.getElementById('fcCounter').textContent = "";
+    document.getElementById('progressBar').style.width = "0%";
+    return;
+  }
+  document.getElementById('frontTag').textContent = c.cat;
+  document.getElementById('frontText').textContent = c.front;
+  document.getElementById('backTag').textContent = c.cat;
+  document.getElementById('backText').textContent = c.back;
+  document.getElementById('fcCounter').textContent = `Cartão ${fcPos+1} de ${fcFiltered.length}`;
+  document.getElementById('progressBar').style.width = `${((fcPos+1)/fcFiltered.length)*100}%`;
+}
+
+fcardEl.addEventListener('click', () => {
+  fcFlipped = !fcFlipped;
+  fcardEl.classList.toggle('flipped', fcFlipped);
+});
+document.getElementById('fcNext').addEventListener('click', () => {
+  if(fcFiltered.length===0) return;
+  fcPos = (fcPos + 1) % fcFiltered.length;
+  fcFlipped = false; fcardEl.classList.remove('flipped');
+  renderFc();
+});
+document.getElementById('fcPrev').addEventListener('click', () => {
+  if(fcFiltered.length===0) return;
+  fcPos = (fcPos - 1 + fcFiltered.length) % fcFiltered.length;
+  fcFlipped = false; fcardEl.classList.remove('flipped');
+  renderFc();
+});
+document.getElementById('fcShuffle').addEventListener('click', () => {
+  if(fcFiltered.length===0) return;
+  for(let i=fcOrder.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [fcOrder[i],fcOrder[j]] = [fcOrder[j],fcOrder[i]];
+  }
+  fcPos = 0; fcFlipped = false; fcardEl.classList.remove('flipped');
+  renderFc();
+});
+
+buildFilters();
+renderFc();
+</script>
+
+</body>
+</html>
